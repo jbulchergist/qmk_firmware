@@ -17,10 +17,25 @@
 #include QMK_KEYBOARD_H
 #include "muse.h"
 
+bool    _capsLock;
+
+#ifdef AUDIO_ENABLE
+float capsOnSong[][2]           = SONG(AUDIO_ON_SOUND);
+float capsOffSong[][2]          = SONG(AUDIO_OFF_SOUND);
+float layer0Song[][2]           = SONG(MY_COIN);
+float layerGameSong[][2]        = SONG(MY_TREASURE);
+float layerNumpadSong[][2]      = SONG(MY_MUSHROOMS);
+#endif
+
+enum {
+  TD_ALT_NUMPAD,
+};
+
 enum preonic_layers {
   _QWERTY,
-  _COLEMAK,
-  _DVORAK,
+  _GAME,
+  _VMOTION,
+  _NUMPAD,
   _LOWER,
   _RAISE,
   _ADJUST
@@ -28,11 +43,14 @@ enum preonic_layers {
 
 enum preonic_keycodes {
   QWERTY = SAFE_RANGE,
-  COLEMAK,
-  DVORAK,
+  GAME,
   LOWER,
   RAISE,
   BACKLIT
+};
+
+qk_tap_dance_action_t tap_dance_actions[] = {
+    [TD_ALT_NUMPAD] = ACTION_TAP_DANCE_LAYER_TOGGLE(KC_LALT, _NUMPAD),
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -47,7 +65,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|------+------+------+------+------+-------|
  * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  | SftEnt|
  * |------+------+------+------+------+------+------+------+------+------+------+-------|
- * | Ctrl | GUI  | Alt  | Alt  |Lower |    Space    |Raise | Left | Down |  Up  | Right |
+ * | Ctrl | GUI  | Alt  | Alt  |Lower |Space/VMOTION|Raise | Left | Down |  Up  | Right |
  * `------------------------------------------------------------------------------------'
  */
 [_QWERTY] = LAYOUT_preonic_grid(
@@ -55,49 +73,28 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_DEL,
   KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
   KC_LSPO, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_SFTENT,
+  KC_LCTL, KC_LGUI, KC_LALT, KC_LALT, LOWER,   LT(_VMOTION, KC_SPC),  LT(_VMOTION, KC_SPC),  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
+),
+
+/* Game mode - remove the layer switching from the space bar
+ * ,------------------------------------------------------------------------------------.
+ * |   `  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |   0  | Bksp  |
+ * |------+------+------+------+------+------+------+------+------+------+------+-------|
+ * | Tab  |   Q  |   W  |   E  |   R  |   T  |   Y  |   U  |   I  |   O  |   P  | Del   |
+ * |------+------+------+------+------+-------------+------+------+------+------+-------|
+ * | Esc  |   A  |   S  |   D  |   F  |   G  |   H  |   J  |   K  |   L  |   ;  |  "    |
+ * |------+------+------+------+------+------|------+------+------+------+------+-------|
+ * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  | SftEnt|
+ * |------+------+------+------+------+------+------+------+------+------+------+-------|
+ * | Ctrl | GUI  | Alt  | Alt  |Lower |    Space    |Raise | Left | Down |  Up  | Right |
+ * `------------------------------------------------------------------------------------'
+ */
+[_GAME] = LAYOUT_preonic_grid(
+  KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC,
+  KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_DEL,
+  KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
+  KC_LSPO, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_SFTENT,
   KC_LCTL, KC_LGUI, KC_LALT, KC_LALT, LOWER,   KC_SPC,  KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
-),
-
-/* Colemak
- * ,-----------------------------------------------------------------------------------.
- * |   `  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |   0  | Bksp |
- * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Tab  |   Q  |   W  |   F  |   P  |   G  |   J  |   L  |   U  |   Y  |   ;  | Del  |
- * |------+------+------+------+------+-------------+------+------+------+------+------|
- * | Esc  |   A  |   R  |   S  |   T  |   D  |   H  |   N  |   E  |   I  |   O  |  "   |
- * |------+------+------+------+------+------|------+------+------+------+------+------|
- * | Shift|   Z  |   X  |   C  |   V  |   B  |   K  |   M  |   ,  |   .  |   /  |Enter |
- * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Brite| Ctrl | Alt  | GUI  |Lower |    Space    |Raise | Left | Down |  Up  |Right |
- * `-----------------------------------------------------------------------------------'
- */
-[_COLEMAK] = LAYOUT_preonic_grid(
-  KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC,
-  KC_TAB,  KC_Q,    KC_W,    KC_F,    KC_P,    KC_G,    KC_J,    KC_L,    KC_U,    KC_Y,    KC_SCLN, KC_DEL,
-  KC_ESC,  KC_A,    KC_R,    KC_S,    KC_T,    KC_D,    KC_H,    KC_N,    KC_E,    KC_I,    KC_O,    KC_QUOT,
-  KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_K,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT,
-  BACKLIT, KC_LCTL, KC_LALT, KC_LGUI, LOWER,   KC_SPC,  KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
-),
-
-/* Dvorak
- * ,-----------------------------------------------------------------------------------.
- * |   `  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |   0  | Bksp |
- * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Tab  |   "  |   ,  |   .  |   P  |   Y  |   F  |   G  |   C  |   R  |   L  | Del  |
- * |------+------+------+------+------+-------------+------+------+------+------+------|
- * | Esc  |   A  |   O  |   E  |   U  |   I  |   D  |   H  |   T  |   N  |   S  |  /   |
- * |------+------+------+------+------+------|------+------+------+------+------+------|
- * | Shift|   ;  |   Q  |   J  |   K  |   X  |   B  |   M  |   W  |   V  |   Z  |Enter |
- * |------+------+------+------+------+------+------+------+------+------+------+------|
- * | Brite| Ctrl | Alt  | GUI  |Lower |    Space    |Raise | Left | Down |  Up  |Right |
- * `-----------------------------------------------------------------------------------'
- */
-[_DVORAK] = LAYOUT_preonic_grid(
-  KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC,
-  KC_TAB,  KC_QUOT, KC_COMM, KC_DOT,  KC_P,    KC_Y,    KC_F,    KC_G,    KC_C,    KC_R,    KC_L,    KC_DEL,
-  KC_ESC,  KC_A,    KC_O,    KC_E,    KC_U,    KC_I,    KC_D,    KC_H,    KC_T,    KC_N,    KC_S,    KC_SLSH,
-  KC_LSFT, KC_SCLN, KC_Q,    KC_J,    KC_K,    KC_X,    KC_B,    KC_M,    KC_W,    KC_V,    KC_Z,    KC_ENT,
-  BACKLIT, KC_LCTL, KC_LALT, KC_LGUI, LOWER,   KC_SPC,  KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
 ),
 
 /* Lower
@@ -118,7 +115,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TILD, KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC, KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_DEL,
   KC_DEL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_UNDS, KC_PLUS, KC_LCBR, KC_RCBR, KC_PIPE,
   _______, KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,S(KC_NUHS),S(KC_NUBS),KC_HOME, KC_END, _______,
-  _______, _______, _______, _______, _______, _______, _______, _______, KC_MPLY, KC_VOLD, KC_VOLU, KC_MNXT
+  KC_RCTL, KC_RGUI, KC_RALT, KC_RALT, _______, _______, _______, _______, KC_MPLY, KC_VOLD, KC_VOLU, KC_MNXT
 ),
 
 /* Raise
@@ -139,7 +136,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_DEL,
   KC_DEL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_MINS, KC_EQL,  KC_LBRC, KC_RBRC, KC_BSLS,
   _______, KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_NUHS, KC_NUBS, KC_PGUP, KC_PGDN, _______,
-  _______, _______, _______, _______, _______, _______, _______, _______, KC_MPLY, KC_VOLD, KC_VOLU, KC_MNXT
+  KC_RCTL, KC_RGUI, KC_RALT, KC_RALT, _______, _______, _______, _______, KC_MPLY, KC_VOLD, KC_VOLU, KC_MNXT
 ),
 
 /* Adjust (Lower + Raise)
@@ -148,7 +145,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      | Reset| Debug|      |      |      |      |TermOf|TermOn|      |      |  Del |
  * |------+------+------+------+------+-------------+------+------+------+------+------|
- * |      |      |Aud cy|Aud on|AudOff|AGnorm|AGswap|Qwerty|Colemk|Dvorak|      |      |
+ * |      |      |Aud cy|Aud on|AudOff| Game |      |Qwerty|      |Dvorak|      |      |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
  * |      |Voice-|Voice+|Mus on|MusOff|MidiOn|MidOff|      |      |      |      |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
@@ -158,31 +155,95 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [_ADJUST] = LAYOUT_preonic_grid(
   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,
   _______, RESET,   DEBUG,   _______, _______, _______, _______, TERM_ON, TERM_OFF,_______, _______, KC_DEL,
-  _______, _______, MU_MOD,  AU_ON,   AU_OFF,  AG_NORM, AG_SWAP, QWERTY,  COLEMAK, DVORAK,  _______, _______,
+  _______, _______, MU_MOD,  AU_ON,   AU_OFF,  GAME,    _______, QWERTY,  _______, _______, _______, _______,
   _______, MUV_DE,  MUV_IN,  MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  _______, _______, _______, _______, _______,
   _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
-)
+),
 
+/* VMotion
+ * ,-----------------------------------------------------------------------------------.
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+-------------+------+------+------+------+------|
+ * |      |      |      |      |      |      | Left | Down |  Up  | Right|      |      |
+ * |------+------+------+------+------+------|------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |             |      |      |      |      |      |
+ * `-----------------------------------------------------------------------------------'
+ */
+[_VMOTION] = LAYOUT_preonic_grid(
+  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
+  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
+  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_LEFT, KC_DOWN, KC_UP, KC_RIGHT, KC_NO, KC_NO,
+  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
+  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, _______, _______, KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO
+),
+
+/* Numpad
+ * ,-----------------------------------------------------------------------------------.
+ * |      |      |      |      |      |      |      |NumLoc|  /   |  *   |  -   |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |  7   |  8   |  9   |  +   |      |
+ * |------+------+------+------+------+-------------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |  4   |  5   |  6   |  =   |      |
+ * |------+------+------+------+------+------|------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |  1   |  2   |  3   |Enter |Enter |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |             |  0   |  0   |  .   |Enter |Enter |
+ * `-----------------------------------------------------------------------------------'
+ */
+[_NUMPAD] = LAYOUT_preonic_grid(
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NUMLOCK, KC_KP_SLASH, KC_KP_ASTERISK,  KC_KP_MINUS, KC_NO,
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_7, KC_KP_8, KC_KP_9,   KC_KP_PLUS,  KC_NO,
+  _______, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_4, KC_KP_5, KC_KP_6,   KC_KP_EQUAL, KC_NO,
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_1, KC_KP_2, KC_KP_3,   KC_KP_ENTER, KC_KP_ENTER,
+  _______, _______, _______, _______, _______, _______, _______, KC_KP_0, KC_KP_0, KC_KP_DOT, KC_KP_ENTER, KC_KP_ENTER
+)
 
 };
 
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    #ifdef DISAUDIO_ENABLE
+    switch (get_highest_layer(state)) {
+        case _QWERTY:
+            PLAY_SONG(layer0Song);
+            break;
+        case _GAME:
+            PLAY_SONG(layerGameSong);
+            break;
+        case _NUMPAD:
+            PLAY_SONG(layerNumpadSong);
+            break;
+    }
+    #endif
+    return state;
+}
+
+bool led_update_user(led_t led_state) {
+    #ifdef AUDIO_ENABLE
+    static uint8_t caps_state = 0;
+    if (caps_state != led_state.caps_lock) {
+        led_state.caps_lock ? PLAY_SONG(capsOnSong) : PLAY_SONG(capsOffSong);
+        caps_state = led_state.caps_lock;
+    }
+    #endif
+    return true;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
+    switch (keycode) {
         case QWERTY:
           if (record->event.pressed) {
             set_single_persistent_default_layer(_QWERTY);
           }
           return false;
           break;
-        case COLEMAK:
+        case GAME:
           if (record->event.pressed) {
-            set_single_persistent_default_layer(_COLEMAK);
-          }
-          return false;
-          break;
-        case DVORAK:
-          if (record->event.pressed) {
-            set_single_persistent_default_layer(_DVORAK);
+            layer_invert(_GAME);
           }
           return false;
           break;
