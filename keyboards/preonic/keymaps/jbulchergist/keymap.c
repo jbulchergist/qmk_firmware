@@ -17,18 +17,20 @@
 #include QMK_KEYBOARD_H
 #include "muse.h"
 
-bool    _capsLock;
+bool    _gamelayer       = false;
+bool    _numpadlayer     = false;
 
 #ifdef AUDIO_ENABLE
-float capsOnSong[][2]           = SONG(AUDIO_ON_SOUND);
-float capsOffSong[][2]          = SONG(AUDIO_OFF_SOUND);
-float layer0Song[][2]           = SONG(MY_COIN);
-float layerGameSong[][2]        = SONG(MY_TREASURE);
-float layerNumpadSong[][2]      = SONG(MY_MUSHROOMS);
+float capsOnSong[][2]           = SONG(MY_CAPS_LOCK_ON);
+float capsOffSong[][2]          = SONG(MY_CAPS_LOCK_OFF);
+float layerGameSong[][2]        = SONG(MY_MUSHROOMS);
+float layerGameOffSong[][2]     = SONG(MY_GAMEOVER);
+float layerNumpadSong[][2]      = SONG(MY_ONE_UP);
+float layerNumpadOffSong[][2]   = SONG(MY_COIN);
 #endif
 
-enum {
-  TD_ALT_NUMPAD,
+enum td_keycodes {
+  TD_ALT_NUMPAD = 0,
 };
 
 enum preonic_layers {
@@ -73,7 +75,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_DEL,
   KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
   KC_LSPO, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_SFTENT,
-  KC_LCTL, KC_LGUI, KC_LALT, KC_LALT, LOWER,   LT(_VMOTION, KC_SPC),  LT(_VMOTION, KC_SPC),  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
+  KC_LCTL, KC_LGUI, TD(TD_ALT_NUMPAD), TD(TD_ALT_NUMPAD), LOWER,   LT(_VMOTION, KC_SPC),  LT(_VMOTION, KC_SPC),  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
 ),
 
 /* Game mode - remove the layer switching from the space bar
@@ -93,7 +95,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_BSPC,
   KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_DEL,
   KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
-  KC_LSPO, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_SFTENT,
+  KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_SFTENT,
   KC_LCTL, KC_LGUI, KC_LALT, KC_LALT, LOWER,   KC_SPC,  KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
 ),
 
@@ -145,9 +147,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      | Reset| Debug|      |      |      |      |TermOf|TermOn|      |      |  Del |
  * |------+------+------+------+------+-------------+------+------+------+------+------|
- * |      |      |Aud cy|Aud on|AudOff| Game |      |Qwerty|      |Dvorak|      |      |
+ * |      |      |Aud cy|Aud on|AudOff| Game |      |Qwerty|      |BLight|BLCycl|Breath|
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |Voice-|Voice+|Mus on|MusOff|MidiOn|MidOff|      |      |      |      |      |
+ * |      |Voice-|Voice+|Mus on|MusOff|MidiOn|MidOff|      |      |BLIncr|BLDecr|      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      |      |      |      |      |             |      |      |      |      |      |
  * `-----------------------------------------------------------------------------------'
@@ -155,8 +157,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [_ADJUST] = LAYOUT_preonic_grid(
   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,
   _______, RESET,   DEBUG,   _______, _______, _______, _______, TERM_ON, TERM_OFF,_______, _______, KC_DEL,
-  _______, _______, MU_MOD,  AU_ON,   AU_OFF,  GAME,    _______, QWERTY,  _______, _______, _______, _______,
-  _______, MUV_DE,  MUV_IN,  MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  _______, _______, _______, _______, _______,
+  _______, _______, MU_MOD,  AU_ON,   AU_OFF,  GAME,    _______, QWERTY,  _______, BL_TOGG, BL_STEP, BL_BRTG,
+  _______, MUV_DE,  MUV_IN,  MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  _______, _______, BL_INC,  BL_DEC,  _______,
   _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
 ),
 
@@ -168,54 +170,63 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+-------------+------+------+------+------+------|
  * |      |      |      |      |      |      | Left | Down |  Up  | Right|      |      |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * | Shift|      |      |      |      |      |      |      |      |      |      |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * |      |      |      |      |      |             |      |      |      |      |      |
+ * | Ctrl | GUI  | Alt  | Alt  |      |             |      |      |      |      |      |
  * `-----------------------------------------------------------------------------------'
  */
 [_VMOTION] = LAYOUT_preonic_grid(
-  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
-  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
-  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_LEFT, KC_DOWN, KC_UP, KC_RIGHT, KC_NO, KC_NO,
-  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
-  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, _______, _______, KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,   KC_LEFT, KC_DOWN, KC_UP, KC_RIGHT, KC_NO, KC_NO,
+  KC_LSFT, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO,
+  KC_LCTL, KC_LGUI, KC_LALT, KC_LALT, KC_NO, _______, _______, KC_NO,   KC_NO, KC_NO,    KC_NO, KC_NO
 ),
 
 /* Numpad
  * ,-----------------------------------------------------------------------------------.
- * |      |      |      |      |      |      |      |NumLoc|  /   |  *   |  -   |      |
+ * |      |      |      |      |      |      |      |      |NumLoc|  /   |  *   |  -   |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * |      |      |      |      |      |      |      |  7   |  8   |  9   |  +   |      |
+ * |      |      |      |      |      |      |      |      |  7   |  8   |  9   |  +   |
  * |------+------+------+------+------+-------------+------+------+------+------+------|
- * |      |      |      |      |      |      |      |  4   |  5   |  6   |  =   |      |
+ * |      |      |      |      |      |      |      |      |  3   |  5   |  6   |  +   |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |      |      |      |      |      |      |  1   |  2   |  3   |Enter |Enter |
+ * |      |      |      |      |      |      |      |      |  1   |  2   |  3   |Enter |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
- * |      |      |      |      |      |             |  0   |  0   |  .   |Enter |Enter |
+ * |      |      |      |      |      |             |      |  0   |  0   |  .   |Enter |
  * `-----------------------------------------------------------------------------------'
  */
 [_NUMPAD] = LAYOUT_preonic_grid(
-  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NUMLOCK, KC_KP_SLASH, KC_KP_ASTERISK,  KC_KP_MINUS, KC_NO,
-  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_7, KC_KP_8, KC_KP_9,   KC_KP_PLUS,  KC_NO,
-  _______, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_4, KC_KP_5, KC_KP_6,   KC_KP_EQUAL, KC_NO,
-  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_1, KC_KP_2, KC_KP_3,   KC_KP_ENTER, KC_KP_ENTER,
-  _______, _______, _______, _______, _______, _______, _______, KC_KP_0, KC_KP_0, KC_KP_DOT, KC_KP_ENTER, KC_KP_ENTER
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NUMLOCK, KC_KP_SLASH, KC_KP_ASTERISK,  KC_KP_MINUS,
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_7, KC_KP_8, KC_KP_9,   KC_KP_PLUS,
+  _______, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_4, KC_KP_5, KC_KP_6,   KC_KP_PLUS,
+  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_KP_1, KC_KP_2, KC_KP_3,   KC_KP_ENTER,
+  _______, _______, _______, _______, _______, _______, _______, _______, KC_KP_0, KC_KP_0, KC_KP_DOT, KC_KP_ENTER
 )
 
 };
 
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    #ifdef DISAUDIO_ENABLE
+    #ifdef AUDIO_ENABLE
     switch (get_highest_layer(state)) {
         case _QWERTY:
-            PLAY_SONG(layer0Song);
+            if (_gamelayer) {
+                PLAY_SONG(layerGameOffSong);
+                _gamelayer = false;
+            }
+            if (_numpadlayer) {
+                PLAY_SONG(layerNumpadOffSong);
+                _numpadlayer = false;
+            }
             break;
         case _GAME:
             PLAY_SONG(layerGameSong);
+            _gamelayer = true;
             break;
         case _NUMPAD:
             PLAY_SONG(layerNumpadSong);
+            _numpadlayer = true;
             break;
     }
     #endif

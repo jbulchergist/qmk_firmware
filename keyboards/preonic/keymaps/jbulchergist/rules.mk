@@ -1,2 +1,3 @@
 SRC += muse.c
 TAP_DANCE_ENABLE = yes
+BACKLIGHT_ENABLE = yes
