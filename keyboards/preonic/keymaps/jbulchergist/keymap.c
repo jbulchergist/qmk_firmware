@@ -23,10 +23,10 @@ bool    _numpadlayer     = false;
 #ifdef AUDIO_ENABLE
 float capsOnSong[][2]           = SONG(MY_CAPS_LOCK_ON);
 float capsOffSong[][2]          = SONG(MY_CAPS_LOCK_OFF);
-float layerGameSong[][2]        = SONG(MY_MUSHROOMS);
-float layerGameOffSong[][2]     = SONG(MY_GAMEOVER);
-float layerNumpadSong[][2]      = SONG(MY_ONE_UP);
-float layerNumpadOffSong[][2]   = SONG(MY_COIN);
+float layerGameSong[][2]        = SONG(MY_GAMEPOWER);
+float layerGameOffSong[][2]     = SONG(MY_GAMEOFF);
+float layerNumpadSong[][2]      = SONG(MY_RND);
+float layerNumpadOffSong[][2]   = SONG(MY_FLIP);
 #endif
 
 enum td_keycodes {
