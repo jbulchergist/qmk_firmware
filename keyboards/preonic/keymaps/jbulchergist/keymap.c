@@ -31,8 +31,8 @@ float layerNumpadOffSong[][2]   = SONG(MY_FLIP);
 #endif
 
 enum td_keycodes {
-  TD_ALT_NUMPAD = 0,
-  TD_LSFT_CAPS = 0,
+  TD_ALT_NUMPAD,
+  TD_LSFT_CAPS,
 };
 
 enum preonic_layers {
